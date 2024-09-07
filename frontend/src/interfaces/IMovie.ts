@@ -7,5 +7,5 @@ export interface MoviesInterface {
   Actor?: string;          // ชื่อนักแสดง (optional)
   Synopsis?: string;       // เรื่องย่อของหนัง (optional)
   ReleaseDate?: string;      // วันที่ฉาย (optional)
-  Poster?: File | string;  // สามารถเป็นไฟล์หรือ URL ได้ (ขึ้นอยู่กับการใช้งานใน frontend/backend)
+  Poster?: File | Blob;  // สามารถเป็นไฟล์หรือ URL ได้ (ขึ้นอยู่กับการใช้งานใน frontend/backend)
 }

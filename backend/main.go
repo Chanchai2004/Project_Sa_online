@@ -38,6 +38,7 @@ func main() {
 		router.POST("/movies", controller.CreateMovie)       // เพิ่มหนังใหม่พร้อมโปสเตอร์ (รับไฟล์ poster)
 		router.PATCH("/movies/:id", controller.UpdateMovie)  // อัปเดตข้อมูลหนังพร้อมโปสเตอร์ (รับไฟล์ poster)
 		router.DELETE("/movies/:id", controller.DeleteMovie) // ลบหนังโดยใช้ ID
+		router.GET("/movie/:id/poster", controller.GetMoviePosterByID)
 
 		// Theater Routes
 		router.GET("/theaters", controller.ListTheaters)

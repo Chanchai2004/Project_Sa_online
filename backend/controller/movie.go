@@ -16,8 +16,8 @@ func CreateMovie(c *gin.Context) {
 	// อ่านไฟล์โปสเตอร์จาก request
 	file, _, err := c.Request.FormFile("poster")
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Failed to read poster file"})
-		return
+    c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+    return
 	}
 	defer file.Close()
 
@@ -168,5 +168,26 @@ func UpdateMovie(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "Movie updated successfully", "data": movie})
+}
+
+func GetMoviePosterByID(c *gin.Context) {
+    ID := c.Param("id")
+    var movie entity.Movie
+
+    db := config.DB()
+    if err := db.First(&movie, ID).Error; err != nil {
+        c.JSON(http.StatusNotFound, gin.H{"error": "Movie not found"})
+        return
+    }
+
+    // ตรวจสอบว่ามีข้อมูลโปสเตอร์หรือไม่
+    if movie.Poster == nil {
+        c.JSON(http.StatusNotFound, gin.H{"error": "Poster not found"})
+        return
+    }
+
+    // ตั้งค่า Content-Type เป็น image/jpeg หรือ image/png ขึ้นอยู่กับรูปแบบไฟล์
+    c.Header("Content-Type", "image/jpeg") // หรือ image/png หากไฟล์เป็น png
+    c.Writer.Write(movie.Poster) // ส่งข้อมูลโปสเตอร์ไปยัง client
 }
 

@@ -31,8 +31,8 @@ const MovieList: React.FC = () => {
   }, []);
 
   // ฟังก์ชันสำหรับจัดการการคลิกและเปลี่ยนเส้นทางไปที่หน้า MovieBooking
-  const handleSelectMovie = (movieName: string) => {
-    navigate(`/dashboard?movieName=${encodeURIComponent(movieName)}`);
+  const handleSelectMovie = (movieID: string) => {
+    navigate(`/dashboard?movieName=${encodeURIComponent(movieID)}`);
   };
 
   // แสดง loading หรือ error หากมี

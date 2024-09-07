@@ -39,25 +39,27 @@ const Movie: React.FC = () => {
     const formData = new FormData();
 
     // เพิ่มข้อมูลลงใน FormData
-    formData.append("MovieName", values.MovieName);
-    formData.append("MovieDuration", values.MovieDuration.toString());  // ระยะเวลาเป็น string
-    formData.append("MovieType", values.MovieType);
-    formData.append("Director", values.Director);
-    formData.append("Actor", values.Actor);
-    formData.append("Synopsis", values.Synopsis);
+    formData.append("movieName", values.MovieName);
+    formData.append("movieDuration", values.MovieDuration.toString());  // ระยะเวลาเป็น string
+    formData.append("movieType", values.MovieType);
+    formData.append("director", values.Director);
+    formData.append("actor", values.Actor);
+    formData.append("synopsis", values.Synopsis);
 
     // แปลงวันที่จาก DatePicker เป็นรูปแบบ YYYY-MM-DD
     if (values.ReleaseDate) {
       const formattedDate = values.ReleaseDate.format("YYYY-MM-DD");  // แปลงเป็น YYYY-MM-DD
-      formData.append("ReleaseDate", formattedDate);
+      formData.append("releaseDate", formattedDate);
     }
 
     // ตรวจสอบว่าโปสเตอร์ถูกเลือกและถูกส่งไปใน FormData
     if (fileList.length > 0) {
-      formData.append("Poster", fileList[0].originFileObj as Blob);  // ต้องเป็นไฟล์
+      formData.append("poster", fileList[0].originFileObj as Blob);  // ต้องเป็นไฟล์
     }
 
     // พิมพ์ข้อมูลที่อยู่ใน formData ออกมา
+    console.log(formData);
+
     console.log("FormData being sent:");
     formData.forEach((value, key) => {
       console.log(key, value);
@@ -69,6 +71,7 @@ const Movie: React.FC = () => {
         message.success("Movie added successfully!");
       } else {
         message.error("Failed to add movie!");
+        console.error("Error uploading movie:" ,response.message);
       }
     } catch (error) {
       console.error("Error uploading movie:", error);

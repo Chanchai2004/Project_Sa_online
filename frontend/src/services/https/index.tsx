@@ -145,7 +145,12 @@ async function GetMovies() {
 }
 
 // ฟังก์ชันเพื่อดึงข้อมูลหนังตาม ID
-async function GetMovieById(id: Number | undefined) {
+async function GetMovieById(id: number | undefined) {
+  if (id === undefined) {
+    console.error("Movie ID is undefined");
+    return false;
+  }
+
   const requestOptions = {
     method: "GET",
     headers: {
@@ -153,17 +158,24 @@ async function GetMovieById(id: Number | undefined) {
     },
   };
 
-  let res = await fetch(`${apiUrl}/movies/${id}`, requestOptions)
-    .then((res) => {
-      if (res.status === 200) {
-        return res.json();
-      } else {
-        return false;
-      }
-    });
+  try {
+    const res = await fetch(`${apiUrl}/movies/${id}`, requestOptions);
 
-  return res;
+    if (res.status === 200) {
+      return await res.json();
+    } else if (res.status === 404) {
+      console.error("Movie not found");
+      return false;
+    } else {
+      console.error("Failed to fetch movie, status code:", res.status);
+      return false;
+    }
+  } catch (error) {
+    console.error("Error fetching movie by ID:", error);
+    return false;
+  }
 }
+
 
 async function CreateMovie(formData: FormData) {
   const requestOptions = {
