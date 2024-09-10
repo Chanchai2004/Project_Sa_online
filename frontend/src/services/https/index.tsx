@@ -47,9 +47,13 @@ async function GetGenders() {
 }
 
 // ฟังก์ชันเพื่อลบสมาชิกตาม ID
-async function DeleteMemberByID(id: Number | undefined) {
+async function DeleteMemberByID(id: Number | undefined, adminID?: number, password?: string) {
   const requestOptions = {
     method: "DELETE",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: password && adminID ? JSON.stringify({ password, adminID }) : undefined,  // ส่ง AdminID และ Password ถ้ามี
   };
 
   let res = await fetch(`${apiUrl}/members/${id}`, requestOptions)
@@ -57,12 +61,17 @@ async function DeleteMemberByID(id: Number | undefined) {
       if (res.status === 200) {
         return true;
       } else {
-        return false;
+        return res.json().then((err) => Promise.reject(err));
       }
+    })
+    .catch((error) => {
+      console.error("Error deleting member:", error);
+      return false;
     });
 
   return res;
 }
+
 
 // ฟังก์ชันเพื่อดึงข้อมูลสมาชิกตาม ID
 async function GetMemberById(id: Number | undefined) {
@@ -159,7 +168,7 @@ async function GetMovieById(id: number | undefined) {
   };
 
   try {
-    const res = await fetch(`${apiUrl}/movies/${id}`, requestOptions);
+    const res = await fetch(`${apiUrl}/movie/${id}`, requestOptions);
 
     if (res.status === 200) {
       return await res.json();
@@ -336,6 +345,29 @@ async function DeleteShowtimeByID(id: Number | undefined) {
   return res;
 }
 
+async function CheckAdminPassword(adminID: number, password: string) {
+  const requestOptions = {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ id: adminID, password }),  // ส่ง AdminID และ Password
+  };
+
+  let res = await fetch(`${apiUrl}/check-admin-password`, requestOptions)
+    .then((response) => response.json())
+    .then((res) => {
+      if (res.success) {
+        return { status: true };
+      } else {
+        return { status: false, message: res.error };
+      }
+    });
+
+  return res;
+}
+
+
 export {
   GetMembers,
   CreateMember,
@@ -353,4 +385,5 @@ export {
   CreateShowtime,
   UpdateShowtime,
   DeleteShowtimeByID,
+  CheckAdminPassword,
 };

@@ -38,6 +38,7 @@ const ShowtimeManagement: React.FC = () => {
   const [popupVisible, setPopupVisible] = useState(false);
   const [selectedShowtimeId, setSelectedShowtimeId] = useState<number | null>(null);
   const isManualUpdate = useRef(false);
+  const [moviePoster, setMoviePoster] = useState<string | null>(null); // State for poster
 
   useEffect(() => {
     if (!isManualUpdate.current && selectedDate) {
@@ -371,12 +372,24 @@ const ShowtimeManagement: React.FC = () => {
     setSelectedTime(moment({ hour: showtime.startTime, minute: 0 }));
     setSelectedMovieID(movies.find(movie => movie.MovieName === showtime.movieTitle)?.ID);
     setSelectedTheaterID(theaters.find(theater => theater.TheaterName === showtime.theater)?.ID);
+    const selectedMovie = movies.find(movie => movie.MovieName === showtime.movieTitle);
     
+    if (selectedMovie) {
+      // ถ้าเจอหนังโดยใช้ movieName หา movie.ID แล้วนำไปสร้าง URL ของโปสเตอร์
+      setSelectedMovieID(selectedMovie.ID);
+      const posterUrl = `http://localhost:8000/api/movie/${selectedMovie.ID}/poster`;
+      setMoviePoster(posterUrl);  // ตั้งค่า poster ใน state
+    } else {
+      setMoviePoster(null);  // ถ้าไม่เจอหนัง ตั้งค่าให้เป็น null
+    }
+
     const foundShowtime = schedule.find(s => 
         s.startTime === showtime.startTime && 
         s.theater === showtime.theater &&
         s.movieTitle === showtime.movieTitle
     );
+
+    
 
     console.log("Selected Showtime ID:", foundShowtime?.ID);
     console.log("Date:", selectedDate?.format('YYYY-MM-DD'));
@@ -525,6 +538,27 @@ const ShowtimeManagement: React.FC = () => {
   footer={null} 
   className="modal-content" // เพิ่ม className ที่นี่
 >
+<Card style={{ padding: '0', margin: '20', display: 'flex', justifyContent: 'center' , marginBottom: '20px'}}>
+  {moviePoster ? (
+    <img
+      src={moviePoster}
+      alt="Movie Poster"
+      style={{ 
+        width: '100%', 
+        height: 'auto', 
+        maxHeight: '50vh', 
+        aspectRatio: '2 / 3', 
+        objectFit: 'cover',
+        margin: '20',
+        padding: '0',
+      }}
+    />
+  ) : (
+    <p>No Poster Available</p>
+  )}
+  
+  
+</Card>
   <div className="header-item">
     <label>Date:</label>
     <DatePicker 

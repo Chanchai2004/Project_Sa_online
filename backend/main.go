@@ -14,7 +14,6 @@ func main() {
 
 	// open connection database
 	config.ConnectionDB()
-
 	// Generate databases
 	config.SetupDatabase()
 
@@ -32,6 +31,8 @@ func main() {
 		router.PATCH("/members", controller.UpdateMember)
 		router.DELETE("/members/:id", controller.DeleteMember)
 
+		router.POST("/check-admin-password", controller.CheckAdminPassword)
+
 		// Movie Routes
 		router.GET("/movies", controller.ListMovies)         // แสดงรายการหนังทั้งหมด
 		router.GET("/movie/:id", controller.GetMovie)        // แสดงรายละเอียดหนังโดยใช้ ID
@@ -42,6 +43,8 @@ func main() {
 
 		// Theater Routes
 		router.GET("/theaters", controller.ListTheaters)
+
+		router.POST("/signin", controller.SignIn)  // New route for sign in
 
 		// Showtime Routes
 		router.POST("/showtimes", controller.CreateShowTime)

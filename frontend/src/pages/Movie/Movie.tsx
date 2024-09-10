@@ -71,7 +71,7 @@ const Movie: React.FC = () => {
         message.success("Movie added successfully!");
       } else {
         message.error("Failed to add movie!");
-        console.error("Error uploading movie:" ,response.message);
+        console.error("Error uploading movie:", response.message);
       }
     } catch (error) {
       console.error("Error uploading movie:", error);
@@ -202,13 +202,24 @@ const Movie: React.FC = () => {
         <Row gutter={[16, 16]}>
           <Col xs={24}>
             <Form.Item label="Poster" name="Poster">
-              <ImgCrop rotate beforeCrop={beforeCrop} quality={1} aspect={1}>
+              <ImgCrop
+                rotate
+                quality={1}
+                aspect={2 / 3} // ตั้งค่าอัตราส่วน 2:3 เพื่อให้ครอปเป็นขนาด 600x900
+                modalTitle="Crop your image"
+                modalWidth={600} // ขนาด modal เพื่อการครอป
+                modalOk="Crop"  // ปุ่ม OK
+                modalCancel="Cancel" // ปุ่ม Cancel
+                cropperProps={{
+                  style: { width: 600, height: 900 } // บังคับให้ครอปเหลือ 600x900
+                }}
+              >
                 <Upload
                   listType="picture-card"
                   fileList={fileList}
                   onChange={onUploadChange}
                   onPreview={onPreview}
-                  beforeUpload={() => false} // หยุดการอัปโหลดทันทีเพื่อควบคุมขนาดภาพ
+                  beforeUpload={() => false} // ปิดการอัปโหลดอัตโนมัติ
                 >
                   {fileList.length < 1 && (
                     <div>

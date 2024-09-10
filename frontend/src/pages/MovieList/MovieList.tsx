@@ -1,56 +1,137 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { GetMovies } from '../../services/https';
-import { MoviesInterface } from '../../interfaces/IMovie'; // นำเข้า MoviesInterface
+import { MoviesInterface } from '../../interfaces/IMovie';
+import 'bootstrap/dist/css/bootstrap.min.css';
+
+import Button from 'react-bootstrap/Button';
+import MultiCarousel from 'react-multi-carousel';
+import 'react-multi-carousel/lib/styles.css';
+import CardShowPoster from './components/cardposter';
+import Carousel from './components/carousel';
+import ProgressBar from 'react-bootstrap/ProgressBar';
 
 const MovieList: React.FC = () => {
   const navigate = useNavigate();
-  const [movies, setMovies] = useState<MoviesInterface[]>([]); // ใช้ MoviesInterface[]
-  const [loading, setLoading] = useState<boolean>(true); // สำหรับแสดงสถานะการโหลด
-  const [error, setError] = useState<string | null>(null); // เก็บข้อความ error หากเกิดขึ้น
+  const [movies, setMovies] = useState<MoviesInterface[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+  const [progress, setProgress] = useState<number>(0);
+  const [activeIndex, setActiveIndex] = useState<number>(0);
+  const [hovered, setHovered] = useState<boolean>(false);
 
   // ฟังก์ชันสำหรับดึงข้อมูลหนังจาก API
   const fetchMovies = async () => {
     try {
-      const response = await GetMovies(); // ใช้ฟังก์ชัน GetMovies จาก services/http
+      const response = await GetMovies();
       if (response) {
-        setMovies(response); // เก็บข้อมูลหนังที่ดึงมาลงใน state
+        setMovies(response);
       } else {
         setError('เกิดข้อผิดพลาดในการดึงข้อมูลภาพยนตร์');
       }
-      setLoading(false); // ปิดการแสดงสถานะการโหลดเมื่อข้อมูลถูกดึงสำเร็จ
+      setLoading(false);
     } catch (err) {
       setError('เกิดข้อผิดพลาดในการดึงข้อมูลภาพยนตร์');
       setLoading(false);
     }
   };
 
-  // ใช้ useEffect สำหรับดึงข้อมูลเมื่อคอมโพเนนต์ถูก mount
   useEffect(() => {
     fetchMovies();
   }, []);
 
-  // ฟังก์ชันสำหรับจัดการการคลิกและเปลี่ยนเส้นทางไปที่หน้า MovieBooking
-  const handleSelectMovie = (movieID: string) => {
-    navigate(`/dashboard?movieName=${encodeURIComponent(movieID)}`);
+  useEffect(() => {
+    if (movies.length > 0 && !hovered) {
+      const interval = setInterval(() => {
+        setProgress((prevProgress) => {
+          if (prevProgress >= 100) {
+            // รีเซ็ต progress และเลื่อนไปยังภาพถัดไป
+            setActiveIndex((prevIndex) => (prevIndex + 1) % movies.length);
+            return 0;
+          }
+          return prevProgress + 2; // เพิ่มค่า progress ทีละ 2% ทุก 200ms
+        });
+      }, 200); // ทุกๆ 200 มิลลิวินาที
+
+      return () => clearInterval(interval); // ล้าง interval เมื่อออกจาก useEffect
+    }
+  }, [movies.length, hovered]);
+
+  const responsive = {
+    superLargeDesktop: {
+      breakpoint: { max: 4000, min: 1024 },
+      items: 5,
+    },
+    desktop: {
+      breakpoint: { max: 1024, min: 768 },
+      items: 3,
+    },
+    tablet: {
+      breakpoint: { max: 768, min: 464 },
+      items: 2,
+    },
+    mobile: {
+      breakpoint: { max: 464, min: 0 },
+      items: 1,
+    },
   };
 
-  // แสดง loading หรือ error หากมี
+  // ฟังก์ชันสำหรับจัดการการคลิกและเปลี่ยนเส้นทางไปที่หน้า MovieBooking
+  const handleSelectMovie = (movieID: number | undefined) => {
+    if (movieID) {
+      navigate(`/dashboard?movieName=${encodeURIComponent(String(movieID))}`);
+    }
+  };
+
   if (loading) return <p>กำลังโหลดข้อมูล...</p>;
   if (error) return <p>{error}</p>;
 
   return (
-    <div>
-      <h1>เลือกภาพยนตร์</h1>
-      <ul>
+    <div className="container mt-5">
+      <div className="row">
+        {/* ส่วนแสดง Carousel พร้อมรายละเอียดหนัง */}
+        <div
+          className="col-md-12"
+          onMouseEnter={() => setHovered(true)}  // หยุดเลื่อนเมื่อ hover
+          onMouseLeave={() => setHovered(false)} // เริ่มเลื่อนเมื่อไม่ hover
+        >
+          {movies.length > 0 && (
+            <Carousel movieID={movies[activeIndex].ID!}>
+              <div className="movie-details">
+                <h2>{movies[activeIndex].MovieName}</h2>
+                <p>{movies[activeIndex].Synopsis}</p>
+                <p><strong>Duration:</strong> {movies[activeIndex].MovieDuration} minutes</p>
+                {movies[activeIndex].MovieType && <p><strong>Type:</strong> {movies[activeIndex].MovieType}</p>}
+                {movies[activeIndex].Director && <p><strong>Director:</strong> {movies[activeIndex].Director}</p>}
+                {movies[activeIndex].Actor && <p><strong>Actors:</strong> {movies[activeIndex].Actor}</p>}
+                {movies[activeIndex].ReleaseDate && (
+                  <p><strong>Release Date:</strong> {new Date(movies[activeIndex].ReleaseDate!).toLocaleDateString()}</p>
+                )}
+                <Button variant="primary" onClick={() => handleSelectMovie(movies[activeIndex].ID)}>
+                  จองตั๋ว
+                </Button>
+              </div>
+            </Carousel>
+          )}
+          <ProgressBar now={progress} style={{ height: '5px', marginTop: '10px' }} /> {/* Progress bar */}
+        </div>
+      </div>
+
+      {/* หมวดหมู่ Action */}
+      <h2 className="mt-5">Action</h2>
+      <MultiCarousel responsive={responsive} infinite={true}>
         {movies.map((movie) => (
-          <li key={movie.ID}>
-            <button onClick={() => handleSelectMovie(movie.MovieName)}>
-              {movie.MovieName}
-            </button>
-          </li>
+          <CardShowPoster key={movie.ID} movieID={movie.ID} /> 
         ))}
-      </ul>
+      </MultiCarousel>
+
+      {/* หมวดหมู่ Drama */}
+      <h2 className="mt-5">Drama</h2>
+      <MultiCarousel responsive={responsive} infinite={true}>
+        {movies.map((movie) => (
+          <CardShowPoster key={movie.ID} movieID={movie.ID} />
+        ))}
+      </MultiCarousel>
     </div>
   );
 };

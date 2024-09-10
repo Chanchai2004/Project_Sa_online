@@ -7,6 +7,7 @@ import Analytics from './pages/Analytics/Analytics'; // นำเข้า Analy
 import MovieList from './pages/MovieList/MovieList';
 import MovieBooking from './pages/MovieBooking/MovieBooking';
 import Movie from './pages/Movie/Movie';
+import 'bootstrap/dist/css/bootstrap.min.css';
 
 const App: React.FC = () => {
   return (
