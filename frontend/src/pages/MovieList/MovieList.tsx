@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { GetMovies } from '../../services/https';
 import { MoviesInterface } from '../../interfaces/IMovie';
 import 'bootstrap/dist/css/bootstrap.min.css';
+import "./MovieList.css"
 
 import Button from 'react-bootstrap/Button';
 import MultiCarousel from 'react-multi-carousel';
@@ -49,9 +50,9 @@ const MovieList: React.FC = () => {
             setActiveIndex((prevIndex) => (prevIndex + 1) % movies.length);
             return 0;
           }
-          return prevProgress + 2; // เพิ่มค่า progress ทีละ 2% ทุก 200ms
+          return prevProgress + 1; // เพิ่มค่า progress ทีละ 1% ทุก 200ms
         });
-      }, 200); // ทุกๆ 200 มิลลิวินาที
+      }, 100); // ทุกๆ 200 มิลลิวินาที
 
       return () => clearInterval(interval); // ล้าง interval เมื่อออกจาก useEffect
     }

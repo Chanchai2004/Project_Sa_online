@@ -152,6 +152,7 @@ const Movie: React.FC = () => {
                 <Option value="Sci-Fi">Sci-Fi</Option>
                 <Option value="Romantic">Romantic</Option>
                 <Option value="Thriller">Thriller</Option>
+                <Option value="War">War</Option>
               </Select>
             </Form.Item>
           </Col>
