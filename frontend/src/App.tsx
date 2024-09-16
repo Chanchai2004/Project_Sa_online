@@ -7,6 +7,8 @@ import Analytics from './pages/Analytics/Analytics'; // นำเข้า Analy
 import MovieList from './pages/MovieList/MovieList';
 import MovieBooking from './pages/MovieBooking/MovieBooking';
 import Movie from './pages/Movie/Movie';
+import MovieTable from './pages/Movietable/movietable';
+import MovieEdit from './pages/MovieEdit/movieedit';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
 const App: React.FC = () => {
@@ -20,7 +22,10 @@ const App: React.FC = () => {
           <Route path="/analytics" element={<Analytics />} /> {/* เพิ่มเส้นทางสำหรับ Analytics */}
           <Route path="/discount" element={<MovieList />} />
           <Route path="/dashboard" element={<MovieBooking />} />
-          <Route path="/movies" element={<Movie/>} />
+          <Route path="/movies" element={<MovieTable/>} />
+          <Route path="/movies/create" element={<Movie/>} />
+          <Route path="/movies/edit/:id" element={<MovieEdit/>} />
+
           {/* เพิ่มเส้นทางอื่นๆ ที่คุณต้องการ */}
         </Routes>
       </div>

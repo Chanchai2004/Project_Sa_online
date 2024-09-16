@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Form,
   Input,
@@ -16,58 +16,100 @@ import {
 import { PlusOutlined } from "@ant-design/icons";
 import ImgCrop from "antd-img-crop";
 import type { UploadFile } from "antd/es/upload/interface";
-import { CreateMovie } from "../../services/https/index"; // นำเข้า CreateMovie
+import moment from "moment";
+import { GetMovieById, UpdateMovie } from "../../services/https/index"; // Import GetMovieById, UpdateMovie
 import { MoviesInterface } from "../../interfaces/IMovie";
+import { useParams } from "react-router-dom";
 
 const { Option } = Select;
-const Movie: React.FC = () => {
+
+function MovieEdit() {
   const [form] = Form.useForm();
+  let { id } = useParams();  // ดึง id จาก URL
   const [fileList, setFileList] = useState<UploadFile[]>([]);  // ไฟล์โปสเตอร์
+  const [movieId, setMovieId] = useState<number | null>(null); // กำหนด movieId เป็น null ตั้งต้น
+  const [movies, setMovies] = useState<MoviesInterface | null>(null); // เก็บรายละเอียดของหนังที่ดึงมา
 
-  const onFinish = async (values: MovieInterface) => {
-    const formData = new FormData();
-
-    // เพิ่มข้อมูลลงใน FormData
-    formData.append("movieName", values.MovieName);
-    formData.append("movieDuration", values.MovieDuration.toString());  // ระยะเวลาเป็น string
-    formData.append("movieType", values.MovieType);
-    formData.append("director", values.Director);
-    formData.append("actor", values.Actor);
-    formData.append("synopsis", values.Synopsis);
-
-    // แปลงวันที่จาก DatePicker เป็นรูปแบบ YYYY-MM-DD
-    if (values.ReleaseDate) {
-      const formattedDate = values.ReleaseDate.format("YYYY-MM-DD");  // แปลงเป็น YYYY-MM-DD
-      formData.append("releaseDate", formattedDate);
-    }
-
-    // ตรวจสอบว่าโปสเตอร์ถูกเลือกและถูกส่งไปใน FormData
-    if (fileList.length > 0) {
-      formData.append("poster", fileList[0].originFileObj as Blob);  // ต้องเป็นไฟล์
-    }
-
-    // พิมพ์ข้อมูลที่อยู่ใน formData ออกมา
-    console.log(formData);
-
-    console.log("FormData being sent:");
-    formData.forEach((value, key) => {
-      console.log(key, value);
-    });
-
+  // ฟังก์ชันสำหรับดึงข้อมูลหนังจาก API
+  const getMovieById = async (id: number) => {
     try {
-      let response = await CreateMovie(formData);  // ส่งไป backend
-      if (response.status) {
-        message.success("Movie added successfully!");
-      } else {
-        message.error("Failed to add movie!");
-        console.error("Error uploading movie:", response.message);
+      const res = await GetMovieById(id);
+      if (res) {
+        setMovies(res);
+        form.setFieldsValue({
+          MovieName: res.MovieName,
+          MovieDuration: res.MovieDuration,
+          MovieType: res.MovieType,
+          Director: res.Director,
+          Actor: res.Actor,
+          Synopsis: res.Synopsis,
+          ReleaseDate: res.ReleaseDate ? moment(res.ReleaseDate) : null,
+        });
       }
     } catch (error) {
-      console.error("Error uploading movie:", error);
+      console.error("Error fetching movie details:", error);
+      message.error("Error fetching movie details.");
     }
   };
 
-  // จับการเปลี่ยนแปลงไฟล์โปสเตอร์
+  // ตรวจสอบ id จาก URL และดึงข้อมูลหนัง
+  useEffect(() => {
+    if (id) {
+      console.log(`Movie ID from URL: ${id}`);
+      setMovieId(Number(id));  // ตั้งค่า movieId จาก id ใน URL
+      getMovieById(Number(id)); // ดึงข้อมูลหนังตาม movieId
+    } else {
+      console.error("Movie ID is missing in URL");
+    }
+  }, [id]);
+
+  const onFinish = async (values: MoviesInterface) => {
+    try {
+      const formData = new FormData();
+      
+      // เพิ่มข้อมูลลงใน FormData
+      formData.append("movieName", values.MovieName);
+      formData.append("movieDuration", values.MovieDuration.toString());
+      formData.append("movieType", values.MovieType || "");
+      formData.append("director", values.Director || "");
+      formData.append("actor", values.Actor || "");
+      formData.append("synopsis", values.Synopsis || "");
+
+      // แปลงวันที่จาก DatePicker เป็นรูปแบบ YYYY-MM-DD
+      if (values.ReleaseDate) {
+        const formattedDate = values.ReleaseDate.format("YYYY-MM-DD");
+        formData.append("releaseDate", formattedDate);
+      }
+
+      // ตรวจสอบว่ามีโปสเตอร์ถูกเลือกหรือไม่
+      if (fileList.length > 0 && fileList[0].originFileObj) {
+        formData.append("poster", fileList[0].originFileObj as Blob);
+      }
+
+      // Log ข้อมูล FormData เพื่อดูว่าอะไรจะถูกส่งไปบ้าง
+      for (let [key, value] of formData.entries()) {
+        console.log(`${key}:`, value);
+      }
+
+      // ตรวจสอบว่า movieId ถูกต้องก่อนส่งข้อมูล
+      if (movieId !== null) {
+        const response = await UpdateMovie(movieId, formData);  // ส่ง movieId และ FormData
+
+        if (response) {
+          message.success("Movie updated successfully!");
+        } else {
+          message.error("Failed to update movie.");
+        }
+      } else {
+        console.error("Movie ID is null. Cannot update movie.");
+        message.error("Failed to update movie. Movie ID is missing.");
+      }
+    } catch (error) {
+      console.error("Error updating movie:", error);
+      message.error("Error updating movie.");
+    }
+  };
+
   const onUploadChange = ({ fileList: newFileList }: { fileList: UploadFile[] }) => {
     setFileList(newFileList);  // อัปเดตไฟล์ที่เลือก
   };
@@ -81,18 +123,8 @@ const Movie: React.FC = () => {
         reader.onload = () => resolve(reader.result as string);
       });
     }
-    const image = new Image();
-    image.src = src;
     const imgWindow = window.open(src);
-    imgWindow?.document.write(image.outerHTML);
-  };
-
-  const beforeCrop = (file: UploadFile) => {
-    const isImage = file.type.startsWith("image/");
-    if (!isImage) {
-      message.error("You can only upload image files!");
-    }
-    return isImage;
+    imgWindow?.document.write(`<img src="${src}" />`);
   };
 
   return (
@@ -191,18 +223,7 @@ const Movie: React.FC = () => {
         <Row gutter={[16, 16]}>
           <Col xs={24}>
             <Form.Item label="Poster" name="Poster">
-              <ImgCrop
-                rotate
-                quality={1}
-                aspect={2 / 3} // ตั้งค่าอัตราส่วน 2:3 เพื่อให้ครอปเป็นขนาด 600x900
-                modalTitle="Crop your image"
-                modalWidth={600} // ขนาด modal เพื่อการครอป
-                modalOk="Crop"  // ปุ่ม OK
-                modalCancel="Cancel" // ปุ่ม Cancel
-                cropperProps={{
-                  style: { width: 600, height: 900 } // บังคับให้ครอปเหลือ 600x900
-                }}
-              >
+              <ImgCrop rotate>
                 <Upload
                   listType="picture-card"
                   fileList={fileList}
@@ -226,7 +247,7 @@ const Movie: React.FC = () => {
           <Col>
             <Form.Item>
               <Button type="primary" htmlType="submit">
-                Add Movie
+                Save Movie
               </Button>
             </Form.Item>
           </Col>
@@ -234,6 +255,6 @@ const Movie: React.FC = () => {
       </Form>
     </Card>
   );
-};
+}
 
-export default Movie;
+export default MovieEdit;

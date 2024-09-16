@@ -118,6 +118,7 @@ func DeleteMovie(c *gin.Context) {
 func UpdateMovie(c *gin.Context) {
 	var movie entity.Movie
 
+	// ดึง movie ID จาก URL
 	movieID := c.Param("id")
 	db := config.DB()
 
@@ -136,30 +137,28 @@ func UpdateMovie(c *gin.Context) {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to read poster data"})
 			return
 		}
-		movie.Poster = posterData
+		movie.Poster = posterData  // อัปเดตโปสเตอร์ถ้ามีการอัปโหลดใหม่
+	} else if err != http.ErrMissingFile { // ตรวจสอบกรณีที่มีข้อผิดพลาดในการอัปโหลด
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to handle poster upload"})
+		return
 	}
 
 	// อ่านข้อมูลภาพยนตร์จาก form-data
-	movieName := c.PostForm("movieName")
-	movieType := c.PostForm("movieType")
-	director := c.PostForm("director")
-	actor := c.PostForm("actor")
-	synopsis := c.PostForm("synopsis")
+	movie.MovieName = c.PostForm("movieName")
+	movie.MovieType = c.PostForm("movieType")
+	movie.Director = c.PostForm("director")
+	movie.Actor = c.PostForm("actor")
+	movie.Synopsis = c.PostForm("synopsis")
 
-	// รับ releaseDate เป็น string โดยตรงจาก form-data
+	// รับ releaseDate เป็น string จาก form-data
 	releaseDate := c.PostForm("releaseDate")
 	if releaseDate == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Release date is required"})
 		return
 	}
 
-	// อัปเดตฟิลด์อื่น ๆ
-	movie.MovieName = movieName
-	movie.MovieType = movieType
-	movie.Director = director
-	movie.Actor = actor
-	movie.Synopsis = synopsis
-	movie.ReleaseDate = releaseDate  // ใช้ string แทน time.Time
+	// เก็บ releaseDate เป็น string โดยตรงในฐานข้อมูล
+	movie.ReleaseDate = releaseDate
 
 	// บันทึกการอัปเดตในฐานข้อมูล
 	if err := db.Save(&movie).Error; err != nil {
@@ -167,6 +166,7 @@ func UpdateMovie(c *gin.Context) {
 		return
 	}
 
+	// ส่งข้อมูลกลับไปยัง frontend
 	c.JSON(http.StatusOK, gin.H{"message": "Movie updated successfully", "data": movie})
 }
 
